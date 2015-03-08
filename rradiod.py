@@ -153,7 +153,6 @@ class MyDaemon(Daemon):
 				lcd.line2("No IP network")
 	
 			elif display_mode == radio.MODE_TIME:
-				displayTime(lcd,radio)
 				if radio.muted():
 					msg = "Sound muted"
 					if radio.getStreaming():
