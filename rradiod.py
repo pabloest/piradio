@@ -704,6 +704,7 @@ def display_current(lcd,radio):
 
 	if source == radio.RADIO:
 		current = radio.getCurrentStation()
+                title = radio.getCurrentTitle()
 	else:
 		current_artist = radio.getCurrentArtist()
 		index = radio.getSearchIndex()
@@ -713,20 +714,27 @@ def display_current(lcd,radio):
 
 	# Display any stream error
 	leng = len(current)
+        log.message("current to display on lcd1: " + current, log.INFO)
 	if radio.gotError():
 		errorStr = radio.getErrorString()
-		lcd.scroll2(errorStr,interrupt)
+		lcd.scroll1(errorStr,interrupt)
 		radio.clearError()
 	else:
 		leng = len(current)
 		if leng > 16:
-			lcd.scroll2(current[0:160],interrupt)
+			lcd.scroll1(current[0:160],interrupt)
 		elif  leng < 1:
-			lcd.line2("No input!")
+			lcd.line1("No input!")
 			time.sleep(1)
 			radio.play(1) # Reset station or track
 		else:
-			lcd.line2(current)
+			lcd.line1(current)
+                if len(title) > 16:
+                        lcd.scroll2(title[0:160],interrupt)
+                elif len(title) < 1:
+                        lcd.line2('')
+                else:
+                        lcd.line2(title)
 	return
 
 # Get currently playing station or track number from MPC
