@@ -1036,12 +1036,8 @@ class Radio:
  	# Returns the same format as the mpc current command
 	# Used for two line displays only
 	def getCurrentStation(self):
-		name = self.getRadioStation() + ' (' + str(self.current_id) + ')'
-		title = self.getCurrentTitle()
-		if len(title) > 0:
-			currentPlaying = name + ": " + title
-		else:
-			currentPlaying = name
+		name = self.getRadioStation()
+                currentPlaying = name
 		self.checkStatus()
 		return currentPlaying
 
