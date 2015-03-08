@@ -964,6 +964,7 @@ class Radio:
 	def getCurrentSong(self):
 		try:
 			currentsong = self.execMpc(client.currentsong())
+                        log.message("current song from Mpc currentsong() is: " + str(currentsong), log.INFO)
 		except:
 			# Try re-connect and status
 			try:
@@ -979,8 +980,10 @@ class Radio:
 		currentsong = self.getCurrentSong()
 		try:
 			name = str(currentsong.get("name"))
+                        log.message("name found in current song, it is: " + name, log.INFO)
 		except:
 			name = "No name"
+                        log.message("no 'name' in currentsong, so set name='no name'", log.INFO)
 		# If no name returned check that the file name is returned OK 
 		# and use name from the search index
 		if name == "None":
@@ -988,6 +991,7 @@ class Radio:
 				time.sleep(0.2)
 				currentsong.get("file")
 				name = self.getStationName(self.search_index) 
+                                log.message("no 'name' in currentsong, so set name='None'", log.INFO)
 			except:
 				name = "Bad stream (" + str(self.current_id) + ")"
 
