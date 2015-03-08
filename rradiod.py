@@ -137,7 +137,7 @@ class MyDaemon(Daemon):
 				radio.setSwitch(0)
 
 			display_mode = radio.getDisplayMode()
-			lcd.setScrollSpeed(0.3) # Scroll speed normal
+			lcd.setScrollSpeed(0.1) # Scroll speed normal
 			dateFormat = radio.getDateFormat()
 			todaysdate = strftime(dateFormat)
 
