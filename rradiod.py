@@ -318,66 +318,90 @@ def get_switch_states(lcd,radio,rss,volumeknob,tunerknob):
 	option = radio.getOption()
 	
 	if switch == MENU_SWITCH:
-		log.message("MENU switch mode=" + str(display_mode), log.DEBUG)
+		log.message("MENU switch pressed, from current mode=" + str(display_mode), log.DEBUG)
 		radio.unmute()
-		display_mode = display_mode + 1
 
-		# Skip RSS mode if not available
-		if display_mode == radio.MODE_RSS and not radio.alarmActive():
-			if not rss.isAvailable():
-				display_mode = display_mode + 1
-			else:
-				lcd.line2("Getting RSS feed")
+		if display_mode == radio.MODE_SOURCE:
+			# do stuff that's unique to the source selection menu
+			log.message("--", log.DEBUG)
+			log.message("display_mode is SOURCE, menu switch pressed, current source from radio.getSource() is: " + str(input_source), log.DEBUG)
+			log.message("--", log.DEBUG)
 
-		if display_mode > radio.MODE_LAST:
-			display_mode = radio.MODE_TIME
-
-		radio.setDisplayMode(display_mode)
-		log.message("New mode " + radio.getDisplayModeString()+
-					"(" + str(display_mode) + ")", log.DEBUG)
-
-		# Shutdown if menu button held for > 3 seconds
-		MenuSwitch = tunerknob.getSwitchState(MENU_SWITCH)
-		log.message("switch state=" + str(MenuSwitch), log.DEBUG)
-		count = 15
-		while MenuSwitch == 0:
-			time.sleep(0.2)
-			MenuSwitch = tunerknob.getSwitchState(MENU_SWITCH)
-			count = count - 1
-			if count < 0:
-				log.message("Shutdown", log.DEBUG)
-				MenuSwitch = 1
-				radio.setDisplayMode(radio.MODE_SHUTDOWN)
-
-		if radio.getUpdateLibrary():
-			update_library(lcd,radio)
-			radio.setDisplayMode(radio.MODE_TIME)
-
-		elif radio.getReload(): 
-			source = radio.getSource()
-			log.message("Reload " + str(source), log.INFO)
-			lcd.line2("Reloading ")
-			reload(lcd,radio)
-			radio.setReload(False)
-			radio.setDisplayMode(radio.MODE_TIME)
-
-		elif radio.optionChanged():
-			log.message("optionChanged", log.DEBUG)
-			if radio.alarmActive() and not radio.getTimer() and option == radio.ALARMSET:
-				radio.setDisplayMode(radio.MODE_SLEEP)
-				radio.mute()
-			else:
+			if input_source == radio.RADIO:
+				lcd.line2("Reloading ")
+				reload(lcd,radio)
+				radio.setReload(False)
 				radio.setDisplayMode(radio.MODE_TIME)
 
-			radio.optionChangedFalse()
+			elif input_source == radio.PLAYER:
+				lcd.line2("Reloading ")
+				reload(lcd,radio)
+				radio.setReload(False)
+				radio.setDisplayMode(radio.MODE_TIME)
 
-		elif radio.loadNew():
-			log.message("Load new  search=" + str(radio.getSearchIndex()), log.DEBUG)
-			radio.playNew(radio.getSearchIndex())
-			radio.setDisplayMode(radio.MODE_TIME)
+			else:
+				# start up the AM/FM radio
+				# set the display mode to show the regular AM/FM band and frequency, station
+				log.message("--", log.DEBUG)
+				log.message("Starting the AM/FM radio", log.DEBUG)
 
-		time.sleep(0.2)
-		interrupt = True
+		elif display_mode != radio.MODE_SOURCE: # menu switching doesn't always switch the display mode, e.g. the options menu lets you press the switch to select an input source, and that should not necessarily change the display mode
+			display_mode = display_mode + 1
+
+			# Skip RSS mode if not available
+			if display_mode == radio.MODE_RSS and not radio.alarmActive():
+				if not rss.isAvailable():
+					display_mode = display_mode + 1
+				else:
+					lcd.line2("Getting RSS feed")
+
+			if display_mode > radio.MODE_LAST:
+				display_mode = radio.MODE_TIME
+
+			radio.setDisplayMode(display_mode)
+			log.message("New mode " + radio.getDisplayModeString()+
+						"(" + str(display_mode) + ")", log.DEBUG)
+
+			# Shutdown if menu button held for > 3 seconds
+			MenuSwitch = tunerknob.getSwitchState(MENU_SWITCH)
+			log.message("switch state=" + str(MenuSwitch), log.DEBUG)
+			count = 15
+			while MenuSwitch == 0:
+				time.sleep(0.2)
+				MenuSwitch = tunerknob.getSwitchState(MENU_SWITCH)
+				count = count - 1
+				if count < 0:
+					log.message("Shutdown", log.DEBUG)
+					MenuSwitch = 1
+					radio.setDisplayMode(radio.MODE_SHUTDOWN)
+
+			if radio.getUpdateLibrary():
+				update_library(lcd,radio)
+				radio.setDisplayMode(radio.MODE_TIME)
+
+			elif radio.getReload():
+				lcd.line2("Reloading ")
+				reload(lcd,radio)
+				radio.setReload(False)
+				radio.setDisplayMode(radio.MODE_TIME)
+
+			elif radio.optionChanged():
+				log.message("optionChanged", log.DEBUG)
+				if radio.alarmActive() and not radio.getTimer() and option == radio.ALARMSET:
+					radio.setDisplayMode(radio.MODE_SLEEP)
+					radio.mute()
+				else:
+					radio.setDisplayMode(radio.MODE_TIME)
+
+				radio.optionChangedFalse()
+
+			elif radio.loadNew():
+				log.message("Load new  search=" + str(radio.getSearchIndex()), log.DEBUG)
+				radio.playNew(radio.getSearchIndex())
+				radio.setDisplayMode(radio.MODE_TIME)
+
+			time.sleep(0.2)
+			interrupt = True
 
 	elif switch == UP_SWITCH:
 		if  display_mode != radio.MODE_SLEEP:
@@ -387,7 +411,8 @@ def get_switch_states(lcd,radio,rss,volumeknob,tunerknob):
 
 			if display_mode == radio.MODE_SOURCE:
 				radio.toggleSource()
-				radio.setReload(True)
+				if radio.source != radio.AMFM:
+					radio.setReload(True)
 
 			elif display_mode == radio.MODE_SEARCH:
 				scroll_search(radio,UP)
@@ -405,6 +430,9 @@ def get_switch_states(lcd,radio,rss,volumeknob,tunerknob):
 			DisplayExitMessage(lcd)
 
 	elif switch == DOWN_SWITCH:
+		source = radio.getSource()
+		log.message("--", log.DEBUG)
+		log.message("current source from radio.getSource() is: " + str(source), log.DEBUG)
 		log.message("DOWN switch display_mode " + str(display_mode), log.DEBUG)
 		if  display_mode != radio.MODE_SLEEP:
 			if radio.muted():
@@ -412,7 +440,8 @@ def get_switch_states(lcd,radio,rss,volumeknob,tunerknob):
 
 			if display_mode == radio.MODE_SOURCE:
 				radio.toggleSource()
-				radio.setReload(True)
+				if radio.source != radio.AMFM:
+					radio.setReload(True)
 
 			elif display_mode == radio.MODE_SEARCH:
 				scroll_search(radio,DOWN)
@@ -631,14 +660,14 @@ def update_library(lcd,radio):
 	radio.loadMusic()
 	return
 
-# Reload if new source selected (RADIO or PLAYER)
+# Reload if new source selected (RADIO or PLAYER or AMFM)
 def reload(lcd,radio):
-	lcd.line1("Loading:")
 	exec_cmd("/bin/umount /media")  # Unmount USB stick
 	exec_cmd("/bin/umount /share")  # Unmount network drive
-
 	source = radio.getSource()
+
 	if source == radio.RADIO:
+		lcd.line1("Loading:")
 		lcd.line2("Radio Stations")
 		dirList=os.listdir("/var/lib/mpd/playlists")
 		for fname in dirList:
@@ -648,12 +677,18 @@ def reload(lcd,radio):
 		radio.loadStations()
 
 	elif source == radio.PLAYER:
+		lcd.line1("Loading:")
 		mount_usb(lcd)
 		mount_share()
 		radio.loadMusic()
 		current = radio.execMpcCommand("current")
 		if len(current) < 1:
 			update_library(lcd,radio)
+
+	elif source == radio.AMFM:
+		lcd.line1("AM/FM Radio")
+		lcd.line2("Tune with knob")
+
 	return
 
 # Mount USB  drive
@@ -857,6 +892,8 @@ def display_source_select(lcd,radio):
 		lcd.line2("Internet Radio")
 	elif source == radio.PLAYER:
 		lcd.line2("Music library")
+	elif source == radio.AMFM:
+		lcd.line2("AM/FM radio")
 	return
 
 # Display search (Station or Track)

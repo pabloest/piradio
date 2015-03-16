@@ -50,6 +50,7 @@ class Radio:
 	# Input source
 	RADIO = 0
 	PLAYER = 1
+	AMFM = 2
 
 	# Player options
 	RANDOM = 0
@@ -92,7 +93,7 @@ class Radio:
 	pause = False   # Is radio state "pause"
 	playlist = []	# Play list (tracks or radio stations)
 	current_id = 1	# Currently playing track or station
-	source = RADIO	# Source RADIO or Player
+	source = RADIO	# Source RADIO or Player or AMFM
 	reload = False	# Reload radio stations or player playlists
 	option = ''     # Any option you wish
 	artist = ""	# Artist (Search routines)
@@ -280,7 +281,7 @@ class Radio:
 			log.message(msg,log.ERROR)
 		return
 
-	# Input Source RADIO, NETWORK or PLAYER
+	# Input Source RADIO, NETWORK, AMFM or PLAYER
 	def getSource(self):
 		return self.source
 
@@ -1125,6 +1126,9 @@ class Radio:
 			self.source = self.PLAYER
 
 		elif self.source == self.PLAYER:
+			self.source = self.AMFM
+
+		elif self.source == self.AMFM:
 			self.source = self.RADIO
 
 		return
